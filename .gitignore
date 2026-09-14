@@ -1,0 +1,8 @@
+*.key
+*_privatekey*
+wg-*.conf
+*.pem
+secrets/
+credenciales*
+Thumbs.db
+.DS_Store
