@@ -44,6 +44,17 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Horas: ___ (completar)
 - Commit: ___ (hash)
 
-### R01F01T01 — Crear VLANs y direccionamiento en pfSense — EN CURSO
-- Objetivo: crear las VLANs (10–50) sobre em1 y asignarles direccionamiento (10.10.X0.1/24).
-- (Pendiente de ejecutar y documentar.)
+### R01F01T01 — Crear VLANs y direccionamiento en pfSense — VLAN 10 hecha (20–50 pendientes) — 2026-09-16
+- Objetivo: crear las VLANs sobre em1 y asignarles direccionamiento (10.10.X0.1/24). Completada la VLAN 10 (Usuarios).
+- Configuración realizada (VLAN 10):
+  - pfSense (consola) opción 1 "Assign Interfaces": VLAN con parent em1, tag 10, asignada como LAN (em1.10).
+  - Opción 2 "Set interface IP": em1.10 = 10.10.10.1/24; servidor DHCP habilitado (rango 10.10.10.100–200).
+  - Switch (GNS3): port 0 → pfSense em1 = dot1q VLAN 1 (troncal); port 1 → PC1 = access VLAN 10.
+- Evidencia: config de puertos del switch; salida de `ip dhcp` y `ping` en PC1 (evidencias/…) → Ilustración X.
+- Prueba (P): PC1 (VPCS) obtiene IP por DHCP (10.10.10.100) y hace ping a 10.10.10.1 → Resultado: OK (~3–5 ms).
+- Incidencias (controladas):
+  1. IP puesta como cliente DHCP por error ("y" en vez de "n" en "via DHCP?"); la LAN quedó sin IP fija. Solución: repetir opción 2 con "n" y fijar 10.10.10.1/24 + rango DHCP.
+  2. Sin conectividad inicial: los puertos del switch estaban en access VLAN 1 por defecto y, al configurarlos, quedaron invertidos (dot1q/access en el puerto equivocado). Detectado con el tooltip del enlace (pfSense em1 = switch port 0; PC1 = switch port 1). Solución: port 0 = dot1q VLAN 1, port 1 = access VLAN 10.
+- Horas: ___ (completar)
+- Commit: ___ (hash)
+- Pendiente: VLANs 20, 30, 40, 50 (mismo patrón).
