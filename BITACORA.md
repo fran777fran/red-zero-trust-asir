@@ -58,3 +58,14 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Horas: ___ (completar)
 - Commit: ___ (hash)
 - Pendiente: VLANs 20, 30, 40, 50 (mismo patrón).
+
+### Acceso web de gestión (Despliegue) — 2026-09-16
+- Objetivo: acceder al webConfigurator de pfSense desde el navegador de Windows para configurar el resto (VLANs, reglas) de forma más ágil que por consola.
+- Configuración realizada:
+  - Adaptador host-only dedicado en VirtualBox (#2 = 10.10.10.2/24, DHCP desactivado); en Windows es "Ethernet 4".
+  - 3ª tarjeta de red en el GNS3 VM conectada a ese host-only #2 (modo promiscuo "permitir todo").
+  - Nodo Cloud dentro del GNS3 VM (eth2) conectado a Switch1 en un puerto access VLAN 10.
+  - Acceso a https://10.10.10.1 (admin) desde Windows.
+- Incidencia (controlada): primero se creó el Cloud en el servidor local; el enlace cruzaba al Switch (en el GNS3 VM) por un túnel entre servidores que no pasaba tráfico (PC1 sí pingaba, Windows no). Solución: mover el Cloud al GNS3 VM con una tarjeta host-only #2 dedicada. Detectado comparando el ping de PC1 (OK) con el de Windows (fallo) y verificando el adaptador correcto (10.10.10.2 = Ethernet 4, no Ethernet 2).
+- Nota de diseño: la gestión está de momento en la VLAN 10; se moverá a la VLAN 40 (Gestión) más adelante (mejora Zero Trust).
+- Horas: ___ · Commit: ___
