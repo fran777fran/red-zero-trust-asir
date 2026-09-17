@@ -44,7 +44,7 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Horas: ___ (completar)
 - Commit: ___ (hash)
 
-### R01F01T01 — Crear VLANs y direccionamiento en pfSense — VLAN 10 hecha (20–50 pendientes) — 2026-09-16
+### R01F01T01 — Crear VLANs y direccionamiento en pfSense — VLANs 10–50 completadas — 2026-09-16/17
 - Objetivo: crear las VLANs sobre em1 y asignarles direccionamiento (10.10.X0.1/24). Completada la VLAN 10 (Usuarios).
 - Configuración realizada (VLAN 10):
   - pfSense (consola) opción 1 "Assign Interfaces": VLAN con parent em1, tag 10, asignada como LAN (em1.10).
@@ -57,7 +57,9 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
   2. Sin conectividad inicial: los puertos del switch estaban en access VLAN 1 por defecto y, al configurarlos, quedaron invertidos (dot1q/access en el puerto equivocado). Detectado con el tooltip del enlace (pfSense em1 = switch port 0; PC1 = switch port 1). Solución: port 0 = dot1q VLAN 1, port 1 = access VLAN 10.
 - Horas: ___ (completar)
 - Commit: ___ (hash)
-- Pendiente: VLANs 20, 30, 40, 50 (mismo patrón).
+- VLANs 20–50 (por interfaz web): creadas en Interfaces → Assignments → VLANs (parent em1, tags 20/30/40/50, descripciones SERVIDORES/DMZ/GESTION/CRITICA); asignadas como OPT1–OPT4; cada interfaz habilitada con IP estática (10.10.20.1 / 10.10.30.1 / 10.10.40.1 / 10.10.50.1, /24, gateway None) y servidor DHCP (rango .100–.200).
+- Incidencia (controlada): al asignar, por una descripción ambigua se cambió temporalmente la interfaz LAN a la VLAN 20 (riesgo de autobloqueo, porque la gestión entra por la VLAN 10). Detectado antes de guardar; solución: LAN devuelta a la VLAN 10 y las nuevas VLANs añadidas como OPT vía "Available network ports → Add".
+- Estado: R01F01 COMPLETO (VLANs 10–50 creadas, direccionadas y con DHCP). Las interfaces OPT nacen sin reglas (default-deny) = línea base Zero Trust; la conectividad por zona se validará en R02.
 
 ### Acceso web de gestión (Despliegue) — 2026-09-16
 - Objetivo: acceder al webConfigurator de pfSense desde el navegador de Windows para configurar el resto (VLANs, reglas) de forma más ágil que por consola.
