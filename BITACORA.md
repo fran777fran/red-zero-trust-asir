@@ -69,5 +69,29 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
   - Nodo Cloud dentro del GNS3 VM (eth2) conectado a Switch1 en un puerto access VLAN 10.
   - Acceso a https://10.10.10.1 (admin) desde Windows.
 - Incidencia (controlada): primero se creó el Cloud en el servidor local; el enlace cruzaba al Switch (en el GNS3 VM) por un túnel entre servidores que no pasaba tráfico (PC1 sí pingaba, Windows no). Solución: mover el Cloud al GNS3 VM con una tarjeta host-only #2 dedicada. Detectado comparando el ping de PC1 (OK) con el de Windows (fallo) y verificando el adaptador correcto (10.10.10.2 = Ethernet 4, no Ethernet 2).
-- Nota de diseño: la gestión está de momento en la VLAN 10; se moverá a la VLAN 40 (Gestión) más adelante (mejora Zero Trust).
+- Nota de diseño: la gestión estaba al principio en la VLAN 10; se movió a la VLAN 40 (Gestión) durante R02 (ver más abajo).
+- Horas: ___ · Commit: ___
+
+### R02 — Microsegmentación (denegación por defecto + reglas de mínimo privilegio) — 2026-09-17/18
+- Objetivo: aplicar denegación por defecto y permitir solo los flujos necesarios entre zonas (mínimo privilegio).
+- Configuración realizada:
+  - En pfSense las reglas se aplican en la interfaz de ORIGEN, de arriba abajo, con deny implícito al final.
+  - Regla DMZ → SERVIDORES, TCP 5432 (interfaz DMZ).
+  - Regla GESTION → any, protocolo Any (zona de administración).
+  - Regla LAN (Usuarios) → DMZ, TCP 443; eliminadas las reglas "Default allow LAN to any" (IPv4 e IPv6) para que rija el deny implícito; anti-lockout de LAN desactivado.
+  - Traslado de la gestión a la VLAN 40: switch port 2 → access VLAN 40; adaptador Windows a 10.10.40.2 + ruta estática (`route -p add 10.10.0.0 mask 255.255.0.0 10.10.40.1`). Administración ahora en https://10.10.40.1.
+- Incidencias (controladas):
+  1. Regla de Usuarios creada por error en la interfaz WAN y con puerto 433; corregida a interfaz LAN y puerto 443.
+  2. La regla Usuarios→DMZ quedaba por debajo de "Default allow LAN to any"; se eliminó la allow-all para que aplicara el orden correcto.
+  3. Ping desde Gestión fallaba: (a) la regla estaba en TCP → cambiada a Any; (b) el PC de gestión no tenía ruta a otras subredes → añadida ruta estática 10.10.0.0/16 vía 10.10.40.1.
+- Estado: R02 núcleo completo (default-deny + flujos DMZ→Servidores, Gestión→todo, Usuarios→DMZ). Refinamientos pendientes: accesos a internet por zona y publicación WAN→DMZ (según alcance / trabajo futuro).
+- Horas: ___ · Commit: ___
+
+### R05 — Contención de la zona crítica (prueba de aislamiento) — 2026-09-18
+- Objetivo: verificar que un host de otra zona NO alcanza la zona crítica y que solo Gestión puede.
+- Prueba (P):
+  - Desde PC1 (Usuarios, 10.10.10.100): ping a 10.10.50.1 (Crítica) y a 10.10.20.1 (Servidores) → timeout = BLOQUEADO.
+  - Desde el PC de Gestión (10.10.40.2): ping a 10.10.50.1 (Crítica) → responde = PERMITIDO.
+- Resultado: el mismo destino (10.10.50.1) queda bloqueado desde Usuarios y permitido desde Gestión → demostración directa de la contención Zero Trust (sin movimiento lateral hacia la zona crítica) y del acceso de administración segregado.
+- Evidencia: capturas de los pings (PC1 timeout / Windows respuesta) → Ilustración X.
 - Horas: ___ · Commit: ___
