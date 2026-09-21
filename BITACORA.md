@@ -95,3 +95,17 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Resultado: el mismo destino (10.10.50.1) queda bloqueado desde Usuarios y permitido desde Gestión → demostración directa de la contención Zero Trust (sin movimiento lateral hacia la zona crítica) y del acceso de administración segregado.
 - Evidencia: capturas de los pings (PC1 timeout / Windows respuesta) → Ilustración X.
 - Horas: ___ · Commit: ___
+
+### R03 — VPN de acceso remoto (WireGuard) — servidor configurado — 2026-09-21
+- Objetivo: proporcionar acceso remoto seguro mediante VPN (WireGuard), sujeto también a las reglas Zero Trust.
+- Configuración realizada (lado servidor):
+  - Instalado el paquete WireGuard (System → Package Manager).
+  - Túnel creado (VPN → WireGuard → Tunnels): escucha en UDP 51820, red de túnel 10.10.90.0/24 (pfSense = 10.10.90.1), claves del servidor generadas. WireGuard habilitado en Settings.
+  - Túnel asignado como interfaz (tun_wg0), descripción "VPN", IPv4 None, interfaz habilitada.
+  - Regla WAN: permitir UDP 51820 hacia la WAN address.
+  - Desactivado "Block private networks and loopback addresses" en la WAN (la "internet" del laboratorio es una red privada, 192.168.42.0/24; WAN de pfSense = 192.168.42.88).
+- Incidencias (controladas):
+  1. Al asignar la interfaz se añadió por error em1 (la troncal) como OPT5; se eliminó —em1 no debe asignarse, es el padre de las VLANs— y se asignó tun_wg0.
+  2. La descripción "WIREGUARD" chocaba con el grupo de interfaces homónimo que crea el paquete; se usó "VPN".
+- Estado: servidor WireGuard operativo (escuchando en 192.168.42.88:51820). Pendiente: peer + cliente (Kali integrada en GNS3, lado WAN) + reglas en la interfaz VPN + prueba de acceso restringido (permitido a Servidores, bloqueado a Crítica).
+- Horas: ___ · Commit: ___
