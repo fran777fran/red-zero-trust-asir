@@ -96,7 +96,7 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Evidencia: capturas de los pings (PC1 timeout / Windows respuesta) → Ilustración X.
 - Horas: ___ · Commit: ___
 
-### R03 — VPN de acceso remoto (WireGuard) — servidor configurado — 2026-09-21
+### R03 — VPN de acceso remoto (WireGuard) — COMPLETADO — 2026-09-21
 - Objetivo: proporcionar acceso remoto seguro mediante VPN (WireGuard), sujeto también a las reglas Zero Trust.
 - Configuración realizada (lado servidor):
   - Instalado el paquete WireGuard (System → Package Manager).
@@ -107,5 +107,12 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Incidencias (controladas):
   1. Al asignar la interfaz se añadió por error em1 (la troncal) como OPT5; se eliminó —em1 no debe asignarse, es el padre de las VLANs— y se asignó tun_wg0.
   2. La descripción "WIREGUARD" chocaba con el grupo de interfaces homónimo que crea el paquete; se usó "VPN".
-- Estado: servidor WireGuard operativo (escuchando en 192.168.42.88:51820). Pendiente: peer + cliente (Kali integrada en GNS3, lado WAN) + reglas en la interfaz VPN + prueba de acceso restringido (permitido a Servidores, bloqueado a Crítica).
+- Cliente y prueba (completado):
+  - Kali integrada en GNS3 en el segmento WAN (switch nuevo entre pfSense em0 y el NAT; Kali con IP 192.168.42.x). Reutilizable como escáner en R06.
+  - Claves del cliente generadas en Kali (wg genkey / wg pubkey). Peer creado en pfSense (Cliente Kali, clave pública del cliente, Allowed IPs 10.10.90.2/32, endpoint dinámico).
+  - Config del cliente en Kali (/etc/wireguard/wg0.conf): PrivateKey del cliente, Address 10.10.90.2/24; [Peer] PublicKey del servidor, Endpoint 192.168.42.88:51820, AllowedIPs 10.10.0.0/16, PersistentKeepalive 25.
+  - Regla en la interfaz VPN: permitir 10.10.90.0/24 → SERVIDORES (mínimo privilegio); el resto (incluida Crítica) queda bloqueado por defecto.
+- Incidencia (controlada): el cliente conectaba (handshake OK, tráfico saliente) pero no recibía respuesta. Causa: en esta versión del paquete WireGuard la dirección del túnel se configura en la INTERFAZ asignada (no en el túnel), y estaba en IPv4=None → faltaba la ruta 10.10.90.0/24 en pfSense (Diagnostics → Routes no la mostraba). Solución: interfaz VPN → IPv4 Static 10.10.90.1/24 → aparece la ruta y el tráfico de retorno funciona.
+- Prueba (P): con el túnel establecido (wg show con "latest handshake"), desde Kali: ping a 10.10.20.1 (Servidores) → RESPONDE (~6 ms); ping a 10.10.50.1 (Crítica) → 100% pérdida (BLOQUEADO).
+- Resultado: R03 COMPLETO. Acceso remoto por VPN cifrada operativo y sujeto al modelo Zero Trust (alcanza lo autorizado, no la zona crítica).
 - Horas: ___ · Commit: ___
