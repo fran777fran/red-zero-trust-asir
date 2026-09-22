@@ -116,3 +116,25 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Prueba (P): con el túnel establecido (wg show con "latest handshake"), desde Kali: ping a 10.10.20.1 (Servidores) → RESPONDE (~6 ms); ping a 10.10.50.1 (Crítica) → 100% pérdida (BLOQUEADO).
 - Resultado: R03 COMPLETO. Acceso remoto por VPN cifrada operativo y sujeto al modelo Zero Trust (alcanza lo autorizado, no la zona crítica).
 - Horas: ___ · Commit: ___
+
+### R04 — Sistema de detección de intrusiones (Suricata IDS) — COMPLETADO — 2026-09-22
+- Objetivo: desplegar un IDS (Suricata) que inspeccione el tráfico del segmento Servidores y detecte reconocimiento/escaneo de puertos, generando alertas registrables.
+- Configuración realizada:
+  - Instalado el paquete Suricata (System → Package Manager).
+  - Instancia creada sobre la interfaz SERVIDORES (em1.20) — "IDS-Servidores" — en modo legacy (detección + registro).
+  - Reglas ET Open descargadas y habilitadas (categorías de escaneo, etc.) vía Global Settings + Updates.
+  - Reglas propias (Category Selection → custom.rules):
+    - SID 1000010 — `alert icmp any any -> any any` — regla de prueba para verificar que el motor inspecciona y carga reglas custom.
+    - SID 1000001 (rev 2) — `alert tcp 10.10.90.0/24 any -> 10.10.20.0/24 any (flags:S,12; threshold:type both, track by_src, count 5, seconds 60; classtype:attempted-recon; ...)` — detección de escaneo SYN desde la VPN hacia Servidores.
+- Evidencia: Logs View → alerts.log y pestaña Alerts (filtro Source 10.10.90.2) → capturas de las alertas ICMP (SID 1000010) y de escaneo (SID 1000001) → Ilustración X. Ruta del log: /var/log/suricata/suricata_em1.<id>/alerts.log.
+- Prueba (P04): con el túnel WireGuard activo, desde Kali (cliente VPN 10.10.90.2):
+  1. `ping -c 4 10.10.20.100` → Suricata registra la alerta SID 1000010 "ICMP detectado (test IDS)" con Src 10.10.90.2 (confirma que el IDS ve el tráfico de la VPN).
+  2. `sudo nmap -sS -p 1-200 10.10.20.100` → Suricata dispara la alerta **SID 1000001 "Escaneo de puertos SYN desde VPN hacia Servidores"** (Prioridad 2, clase "Attempted Information Leak", Src 10.10.90.2 → Dst 10.10.20.100). Detección de reconocimiento CORRECTA.
+- Incidencias (controladas):
+  1. Las reglas ET SCAN no disparaban en un escaneo interno porque HOME_NET incluye todas las redes privadas y esas firmas van en sentido $EXTERNAL_NET→$HOME_NET. Solución: escribir una regla propia orientada al flujo VPN→Servidores.
+  2. Ruido de decodificador "SURICATA TCPv4 invalid checksum" por el offloading de la emulación. Solución: System → Advanced → Networking, desactivados los 3 ajustes de hardware offloading + reboot de pfSense.
+  3. La descarga de reglas fallaba ("Could not resolve host"). Solución: fijar DNS 8.8.8.8/1.1.1.1, desmarcar "DNS Server Override" y activar el modo forwarding del DNS Resolver.
+  4. El escaneo no se detectaba porque el túnel WireGuard estaba caído tras reiniciar la topología (el filtro por Src 10.10.90.2 salía vacío). Solución: `sudo wg-quick up wg0` en Kali; confirmado con la alerta ICMP.
+  5. La primera versión de la regla (flags:S estricto; umbral 15 SYN/10 s) no saltaba. Solución: `flags:S,12` (ignora bits reservados) y umbral 5 SYN/60 s (rev 2).
+- Resultado: R04 COMPLETO. IDS desplegado, inspeccionando el segmento Servidores y detectando/registrando el escaneo de reconocimiento procedente de la VPN.
+- Horas: ___ · Commit: ___

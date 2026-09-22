@@ -1,14 +1,14 @@
 # Seguimiento del proyecto — Red Zero Trust ASIR
 
-> Documento vivo de control. Se actualiza en cada hito. Última actualización: **2026-09-21**.
+> Documento vivo de control. Se actualiza en cada hito. Última actualización: **2026-09-22**.
 
 ## Resumen de porcentaje
 
 | Ámbito | % completado |
 |---|---|
-| **Desarrollo técnico (R01–R06)** | **~70%** |
+| **Desarrollo técnico (R01–R06)** | **~85%** |
 | **Memoria** | ~40% |
-| **Proyecto completo** (técnico + memoria + defensa) | **~60%** |
+| **Proyecto completo** (técnico + memoria + defensa) | **~65%** |
 
 ## Estado por requisito (RFTP)
 
@@ -18,7 +18,7 @@
 | R01 · Segmentación (VLANs 10–50) | ✅ | 100% | — |
 | R02 · Microsegmentación (reglas) | ⏳ | 85% | Salida a internet por zona + publicación WAN→DMZ (necesita servicios reales) |
 | R03 · VPN (WireGuard) | ✅ | 100% | — |
-| R04 · IDS (Suricata) | ⬜ | 0% | Instalar/activar Suricata + detección de escaneo |
+| R04 · IDS (Suricata) | ✅ | 100% | Suricata en VLAN 20; detecta escaneo SYN VPN→Servidores (SID 1000001) e ICMP (SID 1000010) |
 | R05 · Contención zona crítica | ✅ | 95% | Demostrado; opcional: escenario "simular compromiso" más formal |
 | R06 · Validación (nmap) | ⬜ | 0% | Escaneos nmap segmentada vs plana + tabla comparativa |
 
@@ -46,7 +46,7 @@
 |---|---|---|
 | Entrega anteproyecto | 25 sep | ✅ |
 | 1ª entrega parcial (R01) | 9 oct | ✅ (adelantado) |
-| 2ª entrega parcial (R02–R05) | 20 nov | En curso: R02 núcleo/R03/R05 ✅; falta R04 y refinamientos R02 |
+| 2ª entrega parcial (R02–R05) | 20 nov | R02 núcleo/R03/R04/R05 ✅; falta R06 (validación) y refinamientos R02 |
 | Depósito final | 7 dic | — |
 | Defensa | 14–20 dic | — |
 
@@ -56,4 +56,5 @@
 - R01: VLANs 10 (Usuarios), 20 (Servidores), 30 (DMZ), 40 (Gestión), 50 (Crítica) sobre troncal 802.1Q; direccionamiento 10.10.X0.1/24 + DHCP.
 - R02 (núcleo): default-deny + reglas DMZ→Servidores:5432, Gestión→todo, Usuarios→DMZ:443. Gestión movida a VLAN 40.
 - R03: VPN WireGuard; cliente Kali (integrada en GNS3, lado WAN); acceso restringido a Servidores, bloqueado a Crítica.
+- R04: Suricata IDS en la interfaz Servidores (em1.20); reglas ET Open + reglas propias; detecta el escaneo SYN de Kali(VPN)→Servidores (SID 1000001) y tráfico ICMP (SID 1000010).
 - R05: contención probada (Usuarios→Crítica bloqueado; Gestión→Crítica permitido).
