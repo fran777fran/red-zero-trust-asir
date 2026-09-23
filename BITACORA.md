@@ -138,3 +138,23 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
   5. La primera versión de la regla (flags:S estricto; umbral 15 SYN/10 s) no saltaba. Solución: `flags:S,12` (ignora bits reservados) y umbral 5 SYN/60 s (rev 2).
 - Resultado: R04 COMPLETO. IDS desplegado, inspeccionando el segmento Servidores y detectando/registrando el escaneo de reconocimiento procedente de la VPN.
 - Horas: ___ · Commit: ___
+
+### R06 — Validación: comparativa red segmentada vs red plana — COMPLETADO — 2026-09-23
+- Objetivo: validar empíricamente que la segmentación Zero Trust reduce la superficie de ataque y contiene el reconocimiento, comparándola con una red plana equivalente.
+- Metodología: experimento controlado desde el mismo atacante (Kali, cliente VPN 10.10.90.2 → modelo de amenaza "credenciales VPN comprometidas"), mismos objetivos, variando ÚNICAMENTE la política del cortafuegos.
+- Escenario A — Red segmentada (estado real Zero Trust): solo la regla "VPN → Servidores" + denegación implícita. Verificado que las pestañas Floating y WireGuard están vacías → el bloqueo es por diseño, no por casualidad.
+  - `nmap -sn` (una IP por zona): 2 de 6 hosts descubiertos (solo Servidores: 10.10.20.1 y 10.10.20.100).
+  - `nmap -sS -p 1-200 10.10.20.100` (Servidores, autorizada): host up y enumerable (el nodo VPCS responde SYN/ACK a todos los puertos → artefacto de simulación, no servicios reales).
+  - `nmap -sS -p 1-200 10.10.50.1` (Crítica): host down = BLOQUEADO.
+  - Efecto cruzado: el escaneo a Servidores vuelve a disparar la alerta del IDS (R04, SID 1000001).
+- Escenario B — Red plana (simulada): regla temporal allow-all en la interfaz VPN (10.10.90.0/24 → any); ELIMINADA tras la prueba para restaurar el modelo.
+  - `nmap -sn`: 6 de 6 hosts descubiertos (todas las zonas visibles).
+  - `nmap -sS -p 1-200 10.10.50.1` (Crítica): host up, 53/tcp y 80/tcp abiertos.
+  - `nmap -sS -p 1-200 10.10.40.1` (Gestión): host up, 53/tcp y 80/tcp abiertos.
+- Resultado / comparativa: la segmentación reduce los hosts descubiertos de 6/6 (plana) a 2/6 (segmentada, solo la zona autorizada). En red plana, un atacante con credenciales VPN comprometidas alcanza TODA la infraestructura, incluidas la zona crítica y los servicios de gestión del propio firewall (DNS/web); con segmentación Zero Trust queda confinado a la única zona autorizada.
+- Incidencias (controladas):
+  1. Los primeros escaneos salían "host down" en todo: el túnel WireGuard estaba a medio levantar (`wg show` = 0 B received, sin handshake). Solución: `sudo wg-quick down wg0; sudo wg-quick up wg0` y confirmar "latest handshake" + bytes recibidos > 0.
+  2. Tras reiniciar, el VPCS SRV perdió su IP → `ip dhcp` para recuperar 10.10.20.100.
+  3. En una prueba previa se observó acceso a Crítica desde la VPN; se comprobó que era un artefacto de estados residuales de la sesión anterior (cortafuegos stateful), no una regla mal configurada. Lección aprendida: validar siempre desde un estado limpio tras reiniciar.
+- Evidencia: salidas de nmap de ambos escenarios (A y B) → Ilustración X.
+- Horas: ___ · Commit: ___
