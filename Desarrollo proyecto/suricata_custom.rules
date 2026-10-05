@@ -1,0 +1,12 @@
+# Reglas propias de Suricata (custom.rules) - R04
+# Instancia "IDS-Servidores" sobre la interfaz SERVIDORES (em1.20), modo deteccion.
+# Se anaden en: Services > Suricata > (editar instancia) > Rules > Category Selection: custom.rules
+
+# Deteccion de escaneo SYN desde la VPN hacia la zona de Servidores.
+# flags:S,12 = SYN activo ignorando los bits reservados de la cabecera TCP (deteccion robusta).
+# threshold = 5 intentos en 60 s por origen (evita falsos positivos de un paquete suelto).
+alert tcp 10.10.90.0/24 any -> 10.10.20.0/24 any (msg:"Escaneo de puertos SYN desde VPN hacia Servidores"; flags:S,12; threshold:type both, track by_src, count 5, seconds 60; classtype:attempted-recon; sid:1000001; rev:2;)
+
+# Regla de verificacion: alerta ante cualquier ICMP.
+# Sirve para confirmar que el motor inspecciona el segmento y carga las reglas propias.
+alert icmp any any -> any any (msg:"ICMP detectado (test IDS)"; sid:1000010; rev:1;)

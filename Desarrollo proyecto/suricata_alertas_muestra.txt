@@ -1,0 +1,13 @@
+# Muestra de alertas de Suricata (R04)
+# Fichero: /var/log/suricata/suricata_em1.<id>/alerts.log
+# Instancia IDS-Servidores (interfaz SERVIDORES, em1.20).
+
+# --- Regla de verificacion ICMP (SID 1000010): confirma que el IDS ve el trafico de la VPN ---
+[1:1000010:1] ICMP detectado (test IDS) [Classification: (null)] [Priority: 3] {ICMP} 10.10.90.2:8 -> 10.10.20.100:0
+[1:1000010:1] ICMP detectado (test IDS) [Classification: (null)] [Priority: 3] {ICMP} 10.10.20.100:0 -> 10.10.90.2:0
+
+# --- Deteccion del escaneo de reconocimiento (SID 1000001) tras 'nmap -sS' desde Kali ---
+[1:1000001:2] Escaneo de puertos SYN desde VPN hacia Servidores [Classification: Attempted Information Leak] [Priority: 2] {TCP} 10.10.90.2:45635 -> 10.10.20.100:113
+
+# El IDS identifica y registra el barrido de puertos SYN procedente del cliente VPN,
+# demostrando la capacidad de deteccion (visibilidad continua) del modelo Zero Trust.

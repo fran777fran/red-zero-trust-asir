@@ -1,0 +1,14 @@
+# Cliente WireGuard (Kali) - /etc/wireguard/wg0.conf  [EJEMPLO SANITIZADO] - R03
+# IMPORTANTE: la clave privada NO se incluye por seguridad (sustituida por un marcador).
+# Levantar el tunel:  sudo wg-quick up wg0     Comprobar:  sudo wg show
+
+[Interface]
+PrivateKey = <CLAVE_PRIVADA_DEL_CLIENTE_OMITIDA>
+Address = 10.10.90.2/24
+
+[Peer]
+# Clave publica del servidor (pfSense). Las claves publicas no son secretas.
+PublicKey = dO5ypLcJvCAlbizzEXnIhpNvc1vvgEixa3BdPK6t2CI=
+Endpoint = 192.168.42.88:51820
+AllowedIPs = 10.10.0.0/16
+PersistentKeepalive = 25

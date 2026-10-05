@@ -1,0 +1,39 @@
+===========================================================================
+ R06 - ESCENARIO B: RED PLANA (simulada)
+ Mismo atacante (Kali VPN 10.10.90.2). Se anade una regla temporal allow-all
+ (10.10.90.0/24 -> any) en la interfaz VPN, que se ELIMINA tras la prueba.
+===========================================================================
+
+$ sudo nmap -sn 10.10.10.1 10.10.20.1 10.10.30.1 10.10.40.1 10.10.50.1 10.10.20.100
+Nmap scan report for 10.10.10.1    Host is up (0.011s latency).
+Nmap scan report for 10.10.20.1    Host is up (0.013s latency).
+Nmap scan report for 10.10.30.1    Host is up (0.013s latency).
+Nmap scan report for 10.10.40.1    Host is up (0.014s latency).
+Nmap scan report for 10.10.50.1    Host is up (0.015s latency).
+Nmap scan report for 10.10.20.100  Host is up (0.033s latency).
+Nmap done: 6 IP addresses (6 hosts up) scanned in 0.72 seconds
+
+  -> Se descubren TODAS las zonas (6 de 6), incluida la critica.
+
+---------------------------------------------------------------------------
+
+$ sudo nmap -sS -p 1-200 10.10.50.1        # Critica
+Host is up (0.010s latency).
+Not shown: 198 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+53/tcp open  domain
+80/tcp open  http
+
+$ sudo nmap -sS -p 1-200 10.10.40.1        # Gestion
+Host is up (0.011s latency).
+Not shown: 198 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+53/tcp open  domain
+80/tcp open  http
+
+  -> Sin segmentacion, el atacante alcanza Critica y Gestion y ve servicios
+     del propio cortafuegos (DNS 53, HTTP 80).
+
+===========================================================================
+ RESULTADO: hosts descubiertos  ->  Segmentada 2/6   vs   Plana 6/6
+===========================================================================

@@ -1,0 +1,34 @@
+===========================================================================
+ R06 - ESCENARIO A: RED SEGMENTADA (Zero Trust)
+ Atacante = Kali, cliente VPN (10.10.90.2). Politica real: solo "VPN -> Servidores".
+===========================================================================
+
+$ sudo nmap -sn 10.10.10.1 10.10.20.1 10.10.30.1 10.10.40.1 10.10.50.1 10.10.20.100
+Nmap scan report for 10.10.20.1    Host is up (0.017s latency).
+Nmap scan report for 10.10.20.100  Host is up (0.019s latency).
+Nmap done: 6 IP addresses (2 hosts up) scanned in 2.03 seconds
+
+  -> Solo responden los hosts de SERVIDORES (2 de 6). Usuarios, DMZ, Gestion
+     y Critica quedan invisibles (bloqueados por la denegacion por defecto).
+
+---------------------------------------------------------------------------
+
+$ sudo nmap -sS -p 1-200 10.10.20.100      # Servidores (zona AUTORIZADA)
+Nmap scan report for 10.10.20.100
+Host is up (0.17s latency).
+PORT    STATE SERVICE
+1/tcp   open  tcpmux
+...
+200/tcp open  src
+Nmap done: 1 IP address (1 host up) scanned in 1.31 seconds
+
+  NOTA: el nodo VPCS responde SYN/ACK en TODOS los puertos (artefacto de su pila
+  simplificada, no servicios reales). Lo relevante: el host es alcanzable/enumerable.
+
+---------------------------------------------------------------------------
+
+$ sudo nmap -sS -p 1-200 10.10.50.1        # Critica (NO autorizada)
+Note: Host seems down. If it is really up, but blocking our ping probes, try -Pn
+Nmap done: 1 IP address (0 hosts up) scanned in 3.25 seconds
+
+  -> Critica INALCANZABLE: trafico bloqueado. Contencion del movimiento lateral.
