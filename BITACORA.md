@@ -1,8 +1,8 @@
 # Bitácora de desarrollo — Red Zero Trust ASIR
 
-Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la solución" y la planificación real de horas.
+Registro por tarea del RFTP. Cada entrada referencia el apartado "Desarrollo de la solución".
 
-## Plantilla (copiar por cada tarea)
+## Plantilla
 
 ### R0xF0xT0x — [título]
 - Objetivo:
@@ -10,14 +10,11 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Evidencia: evidencias/xxxx.png (Ilustración X)
 - Prueba (P0x): [qué] -> Resultado:
 - Incidencias: ninguna / [problema + solución]
-- Horas:
-- Commit:
-
 ---
 
 ## Registro
 
-### Preparación del entorno de laboratorio (Despliegue) — 2026-09-15/16
+### Preparación del entorno de laboratorio (Despliegue) —
 - Objetivo: montar el entorno de emulación de red (GNS3) y desplegar el cortafuegos pfSense, base de la arquitectura Zero Trust.
 - Configuración realizada:
   - Instalación de GNS3 (GUI) + GNS3 VM en VirtualBox (6 GB RAM, 2 vCPU, virtualización anidada activada).
@@ -29,10 +26,9 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
   2. Sin aceleración KVM (`/dev/kvm` inexistente; sin virtualización anidada efectiva en el host). Solución: `enable_kvm = false` en `gns3_server.conf`; pfSense se ejecuta por emulación (más lento pero funcional).
   3. El instalador de pfSense 2.9.0 es online y requería conexión con Netgate. Solución: WAN (em0) conectada al nodo NAT para dar internet; instalada la edición CE (sin suscripción Plus).
 - Requisitos mínimos: VirtualBox + GNS3 3.x, GNS3 VM (6 GB / 2 vCPU), pfSense CE 2.9.0, ~8 GB de RAM libres.
-- Horas: ___ (completar)
-- Commit: ___ (hash)
 
-### R01F01T02 — Etiquetado 802.1Q en el conmutador — 2026-09-16
+
+### R01F01T02 — Etiquetado 802.1Q en el conmutador —
 - Objetivo: transportar las VLANs de las zonas de confianza hacia el cortafuegos por un enlace troncal 802.1Q.
 - Configuración realizada:
   - Añadido un Ethernet switch (Switch1) en GNS3.
@@ -41,10 +37,8 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Evidencia: configuración de puertos del switch en GNS3 (evidencias/…) → Ilustración X.
 - Prueba (P): pendiente; se validará con el ping de PC1 a su gateway tras crear la VLAN 10 en pfSense (ver R01F01T01).
 - Incidencias: ninguna.
-- Horas: ___ (completar)
-- Commit: ___ (hash)
 
-### R01F01T01 — Crear VLANs y direccionamiento en pfSense — VLANs 10–50 completadas — 2026-09-16/17
+### R01F01T01 — Crear VLANs y direccionamiento en pfSense — VLANs 10–50 completadas —
 - Objetivo: crear las VLANs sobre em1 y asignarles direccionamiento (10.10.X0.1/24). Completada la VLAN 10 (Usuarios).
 - Configuración realizada (VLAN 10):
   - pfSense (consola) opción 1 "Assign Interfaces": VLAN con parent em1, tag 10, asignada como LAN (em1.10).
@@ -55,13 +49,12 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Incidencias (controladas):
   1. IP puesta como cliente DHCP por error ("y" en vez de "n" en "via DHCP?"); la LAN quedó sin IP fija. Solución: repetir opción 2 con "n" y fijar 10.10.10.1/24 + rango DHCP.
   2. Sin conectividad inicial: los puertos del switch estaban en access VLAN 1 por defecto y, al configurarlos, quedaron invertidos (dot1q/access en el puerto equivocado). Detectado con el tooltip del enlace (pfSense em1 = switch port 0; PC1 = switch port 1). Solución: port 0 = dot1q VLAN 1, port 1 = access VLAN 10.
-- Horas: ___ (completar)
-- Commit: ___ (hash)
+
 - VLANs 20–50 (por interfaz web): creadas en Interfaces → Assignments → VLANs (parent em1, tags 20/30/40/50, descripciones SERVIDORES/DMZ/GESTION/CRITICA); asignadas como OPT1–OPT4; cada interfaz habilitada con IP estática (10.10.20.1 / 10.10.30.1 / 10.10.40.1 / 10.10.50.1, /24, gateway None) y servidor DHCP (rango .100–.200).
 - Incidencia (controlada): al asignar, por una descripción ambigua se cambió temporalmente la interfaz LAN a la VLAN 20 (riesgo de autobloqueo, porque la gestión entra por la VLAN 10). Detectado antes de guardar; solución: LAN devuelta a la VLAN 10 y las nuevas VLANs añadidas como OPT vía "Available network ports → Add".
 - Estado: R01F01 COMPLETO (VLANs 10–50 creadas, direccionadas y con DHCP). Las interfaces OPT nacen sin reglas (default-deny) = línea base Zero Trust; la conectividad por zona se validará en R02.
 
-### Acceso web de gestión (Despliegue) — 2026-09-16
+### Acceso web de gestión (Despliegue) —
 - Objetivo: acceder al webConfigurator de pfSense desde el navegador de Windows para configurar el resto (VLANs, reglas) de forma más ágil que por consola.
 - Configuración realizada:
   - Adaptador host-only dedicado en VirtualBox (#2 = 10.10.10.2/24, DHCP desactivado); en Windows es "Ethernet 4".
@@ -70,9 +63,8 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
   - Acceso a https://10.10.10.1 (admin) desde Windows.
 - Incidencia (controlada): primero se creó el Cloud en el servidor local; el enlace cruzaba al Switch (en el GNS3 VM) por un túnel entre servidores que no pasaba tráfico (PC1 sí pingaba, Windows no). Solución: mover el Cloud al GNS3 VM con una tarjeta host-only #2 dedicada. Detectado comparando el ping de PC1 (OK) con el de Windows (fallo) y verificando el adaptador correcto (10.10.10.2 = Ethernet 4, no Ethernet 2).
 - Nota de diseño: la gestión estaba al principio en la VLAN 10; se movió a la VLAN 40 (Gestión) durante R02 (ver más abajo).
-- Horas: ___ · Commit: ___
 
-### R02 — Microsegmentación (denegación por defecto + reglas de mínimo privilegio) — 2026-09-17/18
+### R02 — Microsegmentación (denegación por defecto + reglas de mínimo privilegio) —
 - Objetivo: aplicar denegación por defecto y permitir solo los flujos necesarios entre zonas (mínimo privilegio).
 - Configuración realizada:
   - En pfSense las reglas se aplican en la interfaz de ORIGEN, de arriba abajo, con deny implícito al final.
@@ -85,18 +77,16 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
   2. La regla Usuarios→DMZ quedaba por debajo de "Default allow LAN to any"; se eliminó la allow-all para que aplicara el orden correcto.
   3. Ping desde Gestión fallaba: (a) la regla estaba en TCP → cambiada a Any; (b) el PC de gestión no tenía ruta a otras subredes → añadida ruta estática 10.10.0.0/16 vía 10.10.40.1.
 - Estado: R02 núcleo completo (default-deny + flujos DMZ→Servidores, Gestión→todo, Usuarios→DMZ). Refinamientos pendientes: accesos a internet por zona y publicación WAN→DMZ (según alcance / trabajo futuro).
-- Horas: ___ · Commit: ___
 
-### R05 — Contención de la zona crítica (prueba de aislamiento) — 2026-09-18
+### R05 — Contención de la zona crítica (prueba de aislamiento) —
 - Objetivo: verificar que un host de otra zona NO alcanza la zona crítica y que solo Gestión puede.
 - Prueba (P):
   - Desde PC1 (Usuarios, 10.10.10.100): ping a 10.10.50.1 (Crítica) y a 10.10.20.1 (Servidores) → timeout = BLOQUEADO.
   - Desde el PC de Gestión (10.10.40.2): ping a 10.10.50.1 (Crítica) → responde = PERMITIDO.
 - Resultado: el mismo destino (10.10.50.1) queda bloqueado desde Usuarios y permitido desde Gestión → demostración directa de la contención Zero Trust (sin movimiento lateral hacia la zona crítica) y del acceso de administración segregado.
 - Evidencia: capturas de los pings (PC1 timeout / Windows respuesta) → Ilustración X.
-- Horas: ___ · Commit: ___
 
-### R03 — VPN de acceso remoto (WireGuard) — COMPLETADO — 2026-09-21
+### R03 — VPN de acceso remoto (WireGuard) — COMPLETADO —
 - Objetivo: proporcionar acceso remoto seguro mediante VPN (WireGuard), sujeto también a las reglas Zero Trust.
 - Configuración realizada (lado servidor):
   - Instalado el paquete WireGuard (System → Package Manager).
@@ -115,9 +105,8 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
 - Incidencia (controlada): el cliente conectaba (handshake OK, tráfico saliente) pero no recibía respuesta. Causa: en esta versión del paquete WireGuard la dirección del túnel se configura en la INTERFAZ asignada (no en el túnel), y estaba en IPv4=None → faltaba la ruta 10.10.90.0/24 en pfSense (Diagnostics → Routes no la mostraba). Solución: interfaz VPN → IPv4 Static 10.10.90.1/24 → aparece la ruta y el tráfico de retorno funciona.
 - Prueba (P): con el túnel establecido (wg show con "latest handshake"), desde Kali: ping a 10.10.20.1 (Servidores) → RESPONDE (~6 ms); ping a 10.10.50.1 (Crítica) → 100% pérdida (BLOQUEADO).
 - Resultado: R03 COMPLETO. Acceso remoto por VPN cifrada operativo y sujeto al modelo Zero Trust (alcanza lo autorizado, no la zona crítica).
-- Horas: ___ · Commit: ___
 
-### R04 — Sistema de detección de intrusiones (Suricata IDS) — COMPLETADO — 2026-09-22
+### R04 — Sistema de detección de intrusiones (Suricata IDS) — COMPLETADO —
 - Objetivo: desplegar un IDS (Suricata) que inspeccione el tráfico del segmento Servidores y detecte reconocimiento/escaneo de puertos, generando alertas registrables.
 - Configuración realizada:
   - Instalado el paquete Suricata (System → Package Manager).
@@ -137,9 +126,8 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
   4. El escaneo no se detectaba porque el túnel WireGuard estaba caído tras reiniciar la topología (el filtro por Src 10.10.90.2 salía vacío). Solución: `sudo wg-quick up wg0` en Kali; confirmado con la alerta ICMP.
   5. La primera versión de la regla (flags:S estricto; umbral 15 SYN/10 s) no saltaba. Solución: `flags:S,12` (ignora bits reservados) y umbral 5 SYN/60 s (rev 2).
 - Resultado: R04 COMPLETO. IDS desplegado, inspeccionando el segmento Servidores y detectando/registrando el escaneo de reconocimiento procedente de la VPN.
-- Horas: ___ · Commit: ___
 
-### R06 — Validación: comparativa red segmentada vs red plana — COMPLETADO — 2026-09-23
+### R06 — Validación: comparativa red segmentada vs red plana — COMPLETADO —
 - Objetivo: validar empíricamente que la segmentación Zero Trust reduce la superficie de ataque y contiene el reconocimiento, comparándola con una red plana equivalente.
 - Metodología: experimento controlado desde el mismo atacante (Kali, cliente VPN 10.10.90.2 → modelo de amenaza "credenciales VPN comprometidas"), mismos objetivos, variando ÚNICAMENTE la política del cortafuegos.
 - Escenario A — Red segmentada (estado real Zero Trust): solo la regla "VPN → Servidores" + denegación implícita. Verificado que las pestañas Floating y WireGuard están vacías → el bloqueo es por diseño, no por casualidad.
@@ -157,4 +145,3 @@ Registro por tarea del RFTP. Cada entrada alimenta el apartado "Desarrollo de la
   2. Tras reiniciar, el VPCS SRV perdió su IP → `ip dhcp` para recuperar 10.10.20.100.
   3. En una prueba previa se observó acceso a Crítica desde la VPN; se comprobó que era un artefacto de estados residuales de la sesión anterior (cortafuegos stateful), no una regla mal configurada. Lección aprendida: validar siempre desde un estado limpio tras reiniciar.
 - Evidencia: salidas de nmap de ambos escenarios (A y B) → Ilustración X.
-- Horas: ___ · Commit: ___
