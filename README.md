@@ -71,7 +71,7 @@ La red se divide en zonas de confianza mediante VLANs sobre un enlace troncal 80
 
 ## Trazabilidad y metodología
 
-- El desarrollo se registra en **[BITACORA.md](BITACORA.md)** con una ficha por tarea (objetivo, configuración, evidencia, prueba e incidencias)**.
+- El desarrollo se registra en **[BITACORA.md](BITACORA.md)** con una ficha por tarea (objetivo, configuración etc)**.
 - Los **commits** se corresponden con las tareas del RFTP, de modo que el historial de Git es contrastable con la planificación (Gantt) y los casos de uso, como exige la metodología del proyecto.
 
 ## Seguridad del repositorio
@@ -82,6 +82,6 @@ El fichero `.gitignore` excluye del control de versiones cualquier material sens
 
 ## Autor
 
-**Francisco de Asís Sierra de la Rosa** — Administración de Sistemas Informáticos en Red (modalidad online).
+**Francisco de Asís Sierra de la Rosa** — Administración de Sistemas Informáticos en Red.
 
 Proyecto académico con fines educativos. El laboratorio es un entorno virtualizado y aislado; las direcciones, claves y credenciales mostradas corresponden únicamente a dicho entorno de pruebas.

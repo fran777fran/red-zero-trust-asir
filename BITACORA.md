@@ -7,7 +7,7 @@ Registro por tarea del RFTP. Cada entrada referencia el apartado "Desarrollo de 
 ### R0xF0xT0x — [título]
 - Objetivo:
 - Configuración realizada:
-- Evidencia: evidencias/xxxx.png (Ilustración X)
+- Evidencia: evidencias de imágenes en carpeta
 - Prueba (P0x): [qué] -> Resultado:
 - Incidencias: ninguna / [problema + solución]
 ---
@@ -34,7 +34,7 @@ Registro por tarea del RFTP. Cada entrada referencia el apartado "Desarrollo de 
   - Añadido un Ethernet switch (Switch1) en GNS3.
   - Puerto hacia pfSense (em1): tipo dot1q (troncal) — transporta todas las VLANs etiquetadas.
   - Puerto hacia PC1 (VPCS): tipo access, VLAN 10 (zona Usuarios).
-- Evidencia: configuración de puertos del switch en GNS3 (evidencias/…) → Ilustración X.
+- Evidencia: configuración de puertos del switch en GNS3 (evidencias/…).
 - Prueba (P): pendiente; se validará con el ping de PC1 a su gateway tras crear la VLAN 10 en pfSense (ver R01F01T01).
 - Incidencias: ninguna.
 
@@ -44,7 +44,7 @@ Registro por tarea del RFTP. Cada entrada referencia el apartado "Desarrollo de 
   - pfSense (consola) opción 1 "Assign Interfaces": VLAN con parent em1, tag 10, asignada como LAN (em1.10).
   - Opción 2 "Set interface IP": em1.10 = 10.10.10.1/24; servidor DHCP habilitado (rango 10.10.10.100–200).
   - Switch (GNS3): port 0 → pfSense em1 = dot1q VLAN 1 (troncal); port 1 → PC1 = access VLAN 10.
-- Evidencia: config de puertos del switch; salida de `ip dhcp` y `ping` en PC1 (evidencias/…) → Ilustración X.
+- Evidencia: config de puertos del switch; salida de `ip dhcp` y `ping` en PC1 (evidencias/…).
 - Prueba (P): PC1 (VPCS) obtiene IP por DHCP (10.10.10.100) y hace ping a 10.10.10.1 → Resultado: OK (~3–5 ms).
 - Incidencias (controladas):
   1. IP puesta como cliente DHCP por error ("y" en vez de "n" en "via DHCP?"); la LAN quedó sin IP fija. Solución: repetir opción 2 con "n" y fijar 10.10.10.1/24 + rango DHCP.
@@ -84,7 +84,7 @@ Registro por tarea del RFTP. Cada entrada referencia el apartado "Desarrollo de 
   - Desde PC1 (Usuarios, 10.10.10.100): ping a 10.10.50.1 (Crítica) y a 10.10.20.1 (Servidores) → timeout = BLOQUEADO.
   - Desde el PC de Gestión (10.10.40.2): ping a 10.10.50.1 (Crítica) → responde = PERMITIDO.
 - Resultado: el mismo destino (10.10.50.1) queda bloqueado desde Usuarios y permitido desde Gestión → demostración directa de la contención Zero Trust (sin movimiento lateral hacia la zona crítica) y del acceso de administración segregado.
-- Evidencia: capturas de los pings (PC1 timeout / Windows respuesta) → Ilustración X.
+- Evidencia: capturas de los pings (PC1 timeout / Windows respuesta).
 
 ### R03 — VPN de acceso remoto (WireGuard) — COMPLETADO —
 - Objetivo: proporcionar acceso remoto seguro mediante VPN (WireGuard), sujeto también a las reglas Zero Trust.
@@ -115,7 +115,7 @@ Registro por tarea del RFTP. Cada entrada referencia el apartado "Desarrollo de 
   - Reglas propias (Category Selection → custom.rules):
     - SID 1000010 — `alert icmp any any -> any any` — regla de prueba para verificar que el motor inspecciona y carga reglas custom.
     - SID 1000001 (rev 2) — `alert tcp 10.10.90.0/24 any -> 10.10.20.0/24 any (flags:S,12; threshold:type both, track by_src, count 5, seconds 60; classtype:attempted-recon; ...)` — detección de escaneo SYN desde la VPN hacia Servidores.
-- Evidencia: Logs View → alerts.log y pestaña Alerts (filtro Source 10.10.90.2) → capturas de las alertas ICMP (SID 1000010) y de escaneo (SID 1000001) → Ilustración X. Ruta del log: /var/log/suricata/suricata_em1.<id>/alerts.log.
+- Evidencia: Logs View → alerts.log y pestaña Alerts (filtro Source 10.10.90.2) → capturas de las alertas ICMP (SID 1000010) y de escaneo (SID 1000001). Ruta del log: /var/log/suricata/suricata_em1.<id>/alerts.log.
 - Prueba (P04): con el túnel WireGuard activo, desde Kali (cliente VPN 10.10.90.2):
   1. `ping -c 4 10.10.20.100` → Suricata registra la alerta SID 1000010 "ICMP detectado (test IDS)" con Src 10.10.90.2 (confirma que el IDS ve el tráfico de la VPN).
   2. `sudo nmap -sS -p 1-200 10.10.20.100` → Suricata dispara la alerta **SID 1000001 "Escaneo de puertos SYN desde VPN hacia Servidores"** (Prioridad 2, clase "Attempted Information Leak", Src 10.10.90.2 → Dst 10.10.20.100). Detección de reconocimiento CORRECTA.
@@ -144,4 +144,4 @@ Registro por tarea del RFTP. Cada entrada referencia el apartado "Desarrollo de 
   1. Los primeros escaneos salían "host down" en todo: el túnel WireGuard estaba a medio levantar (`wg show` = 0 B received, sin handshake). Solución: `sudo wg-quick down wg0; sudo wg-quick up wg0` y confirmar "latest handshake" + bytes recibidos > 0.
   2. Tras reiniciar, el VPCS SRV perdió su IP → `ip dhcp` para recuperar 10.10.20.100.
   3. En una prueba previa se observó acceso a Crítica desde la VPN; se comprobó que era un artefacto de estados residuales de la sesión anterior (cortafuegos stateful), no una regla mal configurada. Lección aprendida: validar siempre desde un estado limpio tras reiniciar.
-- Evidencia: salidas de nmap de ambos escenarios (A y B) → Ilustración X.
+- Evidencia: salidas de nmap de ambos escenarios (A y B).
